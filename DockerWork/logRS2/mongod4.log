@@ -1,0 +1,6 @@
+mongod
+rs4-srv2 47014 4 mongod
+dbpath is /space/data2rs/sh/db
+2015-05-21T10:28:17.563+0000 I STORAGE  Engine custom option: cache_size=2G
+2015-05-21T10:28:17.563+0000 I STORAGE  Collection custom option: type=file
+2015-05-21T10:28:17.563+0000 I STORAGE  Index custom option: type=lsm

@@ -1,0 +1,16 @@
+mongo --host 172.31.0.78 --port 37001 < rs1.js
+sleep 1
+mongo --host 172.31.0.78 --port 37002 < rs2.js
+sleep 1
+mongo --host 172.31.0.78 --port 37003 < rs3.js
+sleep 1
+mongo --host 172.31.0.78 --port 37004 < rs4.js
+sleep 1
+mongo --host 172.31.0.78 --port 37005 < rs5.js
+sleep 1
+mongo --host 172.31.0.78 --port 37006 < rs6.js
+sleep 1
+mongo --host 172.31.0.78 --port 37007 < rs7.js
+sleep 1
+mongo --host 172.31.0.78 --port 37008 < rs8.js
+sleep 1

@@ -1,0 +1,8 @@
+mongo $1 --eval "
+      while(true) {
+          s = db.$c.stats();
+          s.time = new Date();
+          print(JSON.stringify(s));
+          sleep($2*1000)
+      }
+  " >cs.log &

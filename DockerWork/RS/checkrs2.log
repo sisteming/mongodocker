@@ -1,0 +1,39 @@
+MongoDB shell version: 3.0.6
+connecting to: 172.31.0.78:37002/test
+{
+	"set" : "rs2",
+	"date" : ISODate("2015-10-27T09:17:50.825Z"),
+	"myState" : 1,
+	"members" : [
+		{
+			"_id" : 0,
+			"name" : "172.31.0.78:37002",
+			"health" : 1,
+			"state" : 1,
+			"stateStr" : "PRIMARY",
+			"uptime" : 123,
+			"optime" : Timestamp(1445937438, 3),
+			"optimeDate" : ISODate("2015-10-27T09:17:18Z"),
+			"electionTime" : Timestamp(1445937438, 2),
+			"electionDate" : ISODate("2015-10-27T09:17:18Z"),
+			"configVersion" : 132406,
+			"self" : true
+		},
+		{
+			"_id" : 1,
+			"name" : "172.31.12.248:47002",
+			"health" : 1,
+			"state" : 2,
+			"stateStr" : "SECONDARY",
+			"uptime" : 32,
+			"optime" : Timestamp(1445937438, 3),
+			"optimeDate" : ISODate("2015-10-27T09:17:18Z"),
+			"lastHeartbeat" : ISODate("2015-10-27T09:17:50.156Z"),
+			"lastHeartbeatRecv" : ISODate("2015-10-27T09:17:50.594Z"),
+			"pingMs" : 0,
+			"configVersion" : 132406
+		}
+	],
+	"ok" : 1
+}
+bye

@@ -1,0 +1,14 @@
+mongo --host 172.31.0.78 --port 37001 < rs3-1.js
+mongo --host 172.31.0.78 --port 37002 < rs3-2.js
+mongo --host 172.31.0.78 --port 37003 < rs3-3.js
+mongo --host 172.31.0.78 --port 37004 < rs3-4.js
+mongo --host 172.31.0.78 --port 37005 < rs3-5.js
+mongo --host 172.31.0.78 --port 37006 < rs3-6.js
+mongo --host 172.31.0.78 --port 37007 < rs3-7.js
+mongo --host 172.31.0.78 --port 37008 < rs3-8.js
+mongo --host 172.31.0.78 --port 37009 < rs3-9.js
+mongo --host 172.31.0.78 --port 37010 < rs3-10.js
+mongo --host 172.31.0.78 --port 37011 < rs3-11.js
+mongo --host 172.31.0.78 --port 37012 < rs3-12.js
+mongo --host 172.31.0.78 --port 37013 < rs3-13.js
+mongo --host 172.31.0.78 --port 37014 < rs3-14.js

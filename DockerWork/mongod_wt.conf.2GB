@@ -1,0 +1,13 @@
+systemLog:
+  destination: file
+  path: "/data/db/mongod.log"
+  logAppend: true
+storage:
+  engine: wiredTiger 
+  wiredTiger:
+    engineConfig:
+      configString: 'cache_size=2G'
+    collectionConfig: 
+      configString: 'type=file'
+    indexConfig:
+      configString: 'type=lsm'

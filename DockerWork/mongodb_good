@@ -1,0 +1,66 @@
+FROM ubuntu
+MAINTAINER Marco Bonezzi "marco.bonezzi@10gen.com"
+
+#PARAMETERS
+# DATA VOLUME = /data/db
+# configuration = mongod_wt.conf (can be built outside)
+# PORT (EXPOSE) 
+
+#CREATE GROUP AND USER FOR MONGODB
+# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
+RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
+
+#UPDATE PACKAGES AND INSTALL NUMACTL
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		ca-certificates curl \
+		numactl \
+	&& rm -rf /var/lib/apt/lists/*
+
+# CONFIGURATION STEPS TO INSTALL GOSU
+# grab gosu for easy step-down from root
+RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-$(dpkg --print-architecture)" \
+	&& curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.2/gosu-$(dpkg --print-architecture).asc" \
+	&& gpg --verify /usr/local/bin/gosu.asc \
+	&& rm /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu
+
+# ADDING REPO KEY
+# gpg: key 7F0CEB10: public key "Richard Kreuter <richard@10gen.com>" imported
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 492EAFE8CD016A07919F1D2B9ECBEC467F0CEB10
+
+# SETTING MONGODB VERSION TO WORK WITH
+ENV MONGO_MAJOR 3.0
+ENV MONGO_VERSION 3.0.3
+
+# APPEND THE LATEST REPO VERSION TO sources.list
+RUN echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+
+# UPDATE REPOS AND INSTALL MONGODB WITH DEFINED VERSION
+RUN set -x \
+	&& apt-get update \
+	&& apt-get install -y mongodb-org=$MONGO_VERSION \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& rm -rf /var/lib/mongodb \
+	&& mv /etc/mongod.conf /etc/mongod.conf.orig
+
+# DATA DIRECTORY SETUP
+RUN mkdir -p /data/db && chown -R mongodb:mongodb /data/db
+
+# WE DON'T NEED TO DEFINE THE VOLUME HERE if mounted from HOST
+
+# SETTING ENTRYPOINT
+COPY docker-entrypoint.sh /entrypoint.sh
+# COPY MONGOD WIRED TIGER CONFIG FILE
+COPY mongod_wt.conf /etc/mongod.conf
+
+# DEFINE ENTRYPOINT
+ENTRYPOINT ["/entrypoint.sh"]
+
+# PORT TO BE EXPOSED (inside container, different on host) 
+EXPOSE 27017
+
+# COMMAND TO RUN WHEN RUNNING THE CONTAINER
+# !NEEDSWORK (not happy with mongod.conf file)
+CMD ["mongod", "-f", "/etc/mongod.conf","--dbpath","/data/db"]

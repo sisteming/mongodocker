@@ -1,0 +1,40 @@
+MongoDB shell version: 3.0.6
+connecting to: 172.31.0.78:37009/test
+{
+	"set" : "rs9",
+	"date" : ISODate("2015-10-27T09:17:58.126Z"),
+	"myState" : 1,
+	"members" : [
+		{
+			"_id" : 0,
+			"name" : "172.31.0.78:37009",
+			"health" : 1,
+			"state" : 1,
+			"stateStr" : "PRIMARY",
+			"uptime" : 131,
+			"optime" : Timestamp(1445937446, 3),
+			"optimeDate" : ISODate("2015-10-27T09:17:26Z"),
+			"electionTime" : Timestamp(1445937446, 2),
+			"electionDate" : ISODate("2015-10-27T09:17:26Z"),
+			"configVersion" : 68223,
+			"self" : true
+		},
+		{
+			"_id" : 1,
+			"name" : "172.31.12.248:47009",
+			"health" : 1,
+			"state" : 2,
+			"stateStr" : "SECONDARY",
+			"uptime" : 31,
+			"optime" : Timestamp(1445937446, 3),
+			"optimeDate" : ISODate("2015-10-27T09:17:26Z"),
+			"lastHeartbeat" : ISODate("2015-10-27T09:17:57.500Z"),
+			"lastHeartbeatRecv" : ISODate("2015-10-27T09:17:56.425Z"),
+			"pingMs" : 0,
+			"lastHeartbeatMessage" : "could not find member to sync from",
+			"configVersion" : 68223
+		}
+	],
+	"ok" : 1
+}
+bye

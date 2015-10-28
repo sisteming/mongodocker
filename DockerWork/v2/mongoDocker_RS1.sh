@@ -1,0 +1,229 @@
+#!/bin/bash
+
+#CONFIGURATION 
+#-----CGROUPS----------
+CGROUP=1
+MEM=512
+CPU=512
+MEMc=512
+CPUc=512
+MEMs=512
+CPUs=512
+#######################
+PORTRANGE=3701
+NUM_MONGOD=4
+WORKDIR=/space/data2
+MONGODDIR=$WORKDIR/sh
+MONGOCFG=$WORKDIR/configsvr
+MONGOSDIR=$WORKDIR/mongos
+MONGODCMD='gosu mongodb mongod -f /etc/mongod.conf'
+MONGOSCMD='gosu mongodb mongos --configdb '
+HOSTIP=`/sbin/ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+
+setup_kernel(){
+	#ENSURE KERNEL SETTINGS ARE OK
+	sudo sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
+	sudo sh -c "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
+	sudo sh -c "echo 0 > /proc/sys/vm/zone_reclaim_mode"
+	sudo sh -c "echo never > /sys/kernel/mm/transparent_hugepage/defrag"
+	sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"
+}
+
+checknodes(){
+	check=0
+	check2=0
+	PR=`echo $PORTRANGE + 1000 | bc`
+	#MONGOD - RS
+	for i in `seq 1 $NUM_MONGOD`;
+        do	
+		#RS1
+		nc $HOSTIP $PORTRANGE$i -z
+		up=$?
+		if [ $up -ne  0 ]; then
+			echo "$HOSTIP at $PORTRANGE$i is not up"
+		fi
+		check=`echo $up + $check | bc`	
+		#RS2
+		nc $HOSTIP $PR$i -z
+		up2=$?
+                if [ $up2 -ne 0 ]; then
+			echo "$HOSTIP at $PR$i is not up"
+                 fi
+		check2=`echo $up2 + $check | bc`
+	
+	done
+
+
+if [ $check -ne 0 ] || [ $check2 -ne 0 ]; then
+
+	echo "Some nodes are not properly up and running"
+	exit 1
+fi
+}
+#CREATE DIR BASED ON TYPE
+# type = mongod, configsvr, mongos
+# num
+createdir(){
+	mkdir -p $WORKDIR 
+	TYPE=$1
+	NUM=$2
+	#Create directory (if not created)
+	if [ $TYPE = 'mongod' ]; then
+	        mkdir -p $MONGODDIR$NUM/db > /dev/null
+		chmod -R 777 $MONGODDIR$NUM
+	elif [ $TYPE = 'configsvr' ]; then
+		mkdir -p $MONGOCFG/{db,configdb} > /dev/null
+		#chown -R mongodb:mongodb $MONGOCFG
+		chmod -R 777 $MONGOCFG/
+	else
+		mkdir -p $MONGOSDIR/db > /dev/null
+		chmod -R 777 $MONGOSDIR
+
+	fi
+	if [ $? -eq 0 ]; then
+		echo "Directory created"
+	else
+		echo "Error creating new directories"
+	fi
+}
+
+#RUN CONTAINER
+# name, port, number, type, cfgsvr for mongos
+runCont(){
+	NAME=$1
+	PORT=$2
+	NUMBER=$3
+	TYPE=$4	
+	echo $4
+	#TODO: REDIRECT OUTPUT TO /dev/null
+	echo "$NAME $PORT $NUMBER $TYPE"
+	if [ $TYPE = 'mongod' ]; then
+		#MONGOD
+		if [ $CGROUP -eq 0 ]; then
+			docker run --name $NAME -p $PORT:27017 -v $MONGODDIR$NUMBER:/data mongodb $MONGODCMD --replSet rs$i 
+		else
+			echo "Running with cgroups"
+			docker run --cpu-shares=$CPU --memory="$MEM"m  --name $NAME -p $PORT:27017 -v $MONGODDIR$NUMBER:/data mongodb $MONGODCMD --replSet rs$i
+		fi
+	elif [ $TYPE = 'configsvr' ]; then
+		#MONGO CONFIG SERVER
+		if [ $CGROUP -eq 0 ]; then
+			docker run --name $NAME -p $PORT:27019 -v $MONGOCFG:/data mongodb $MONGODCMD --configsvr 
+		else
+			docker run --cpu-shares=$CPUc --memory="$MEMc"m --name $NAME -p $PORT:27019 -v $MONGOCFG:/data mongodb $MONGODCMD --configsvr
+		fi
+	else 
+		#MONGOS
+		if [ $CGROUP -eq 0 ]; then
+			docker run --name $NAME -p $PORT:27017 -v $MONGOSDIR$i:/data mongodb $MONGOSCMD $5
+		else	
+			docker run --cpu-shares=$CPUs --memory="$MEMs"m --name $NAME -p $PORT:27017 -v $MONGOSDIR$i:/data mongodb $MONGOSCMD $5 
+		fi
+	fi	
+	exit 0
+}
+
+stopContainers(){
+	#STOP All
+	echo "Stopping all containers..."
+	docker stop $(docker ps -q)
+	exit 0
+}
+
+clean(){
+	docker rm $(docker ps -aq)
+	exit 0
+}
+
+startRS(){
+	#DATA NODES
+	echo $NUM_MONGOD
+	i=1
+	for i in `seq 1 $NUM_MONGOD`;
+	do
+	#	createdir mongod $i
+		echo $i
+		#Run docker container
+		echo "rs$i-srv1 $PORTRANGE$i $i 'mongod'"
+		runCont "rs$i-srv1" "$PORTRANGE$i" "$i" 'mongod' > log/mongod$i.log 2>&1 &
+		#docker run --name "rs$i-srv1" -p "$PORTRANGE$i":27017 -v "/space/data/db$i":/data mongodb mongod -f /etc/mongod.conf --replSet rs$i  &
+		#> /dev/null 2>&1 &
+	
+	done
+	exit 0
+}
+
+startConfigSvr(){
+	#CONFIG SERVER
+	runCont cfgsrv1 "$PORTRANGE"0 0 configsvr > log/cfgsvr.log 2>&1 &
+	exit 0
+}
+	
+
+startMongos(){
+	#MONGOS
+	echo $1 $2
+	
+	runCont mongos "$PORTRANGE"7 0 mongos $1:$2 > log/mongos.log 2>&1 & 
+	exit 0
+}
+
+listContainers(){
+	echo "Checking containers"
+	sleep 5
+	docker ps
+}
+
+createenv(){
+	mkdir log >  /dev/null 2>&1
+	sudo rm -rf $WORKDIR
+	for i in `seq 1 $NUM_MONGOD`;
+	do
+		createdir mongod $i
+	done
+	createdir configsvr
+	createdir mongos	
+}
+
+#MAIN SCRIPT
+
+case "$1" in
+init)	
+	setup_kernel
+	;;
+setup)
+	createenv
+	;;
+check)
+	checknodes
+	;;
+startRS)
+        startRS
+        ;;
+startConfigSvr)
+        startConfigSvr 
+        ;;
+startMongos)
+	startMongos $HOSTIP "$PORTRANGE"0
+	;;
+list)
+	listContainers
+	;;
+stop)
+	stopContainers
+	;;
+clean)
+	clean
+	;;
+restart)
+        $0 stop
+        $0 startRS
+	$0 startConfigSvr
+	$0 startMongos
+        ;;
+*)      echo  'Usage: mongoDocker_RS1.sh {setup|startRS|startConfigSvr|startMongos|list|stop|restart}'
+        exit 2
+        ;;
+esac
+exit 0
+

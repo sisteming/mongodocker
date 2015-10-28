@@ -1,0 +1,23 @@
+MongoDB shell version: 3.0.3
+connecting to: 192.168.99.10:37011/socialite
+{
+	"was" : 2,
+	"slowms" : 50000,
+	"$gleStats" : {
+		"lastOpTime" : Timestamp(0, 0),
+		"electionId" : ObjectId("556dc6791e473168de1a0164")
+	}
+}
+bye
+MongoDB shell version: 3.0.3
+connecting to: 192.168.99.10:37012/socialite
+{ "was" : 2, "slowms" : 50000 }
+bye
+MongoDB shell version: 3.0.3
+connecting to: 192.168.99.10:37013/socialite
+{ "was" : 2, "slowms" : 50000 }
+bye
+MongoDB shell version: 3.0.3
+connecting to: 192.168.99.10:37014/socialite
+{ "was" : 2, "slowms" : 50000 }
+bye

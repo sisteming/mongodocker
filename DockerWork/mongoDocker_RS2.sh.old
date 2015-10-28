@@ -1,0 +1,151 @@
+#!/bin/bash
+
+#CONFIGURATION 
+NUM_MONGOD=4
+PORTRANGE=4701
+WORKDIR=/space/data2rs
+MONGODDIR=$WORKDIR/sh
+MONGOCFG=$WORKDIR/configsvr
+MONGOSDIR=$WORKDIR/mongos
+MONGODCMD='mongod -f /etc/mongod.conf'
+MONGOSCMD='mongos --configdb '
+HOSTIP=`/sbin/ifconfig eth1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'`
+
+#CREATE DIR BASED ON TYPE
+# type = mongod, configsvr, mongos
+# num
+createdir(){
+	mkdir -p $WORKDIR
+	TYPE=$1
+	NUM=$2
+	#Create directory (if not created)
+	if [ $TYPE = 'mongod' ]; then
+	        mkdir -p $MONGODDIR$NUM/db > /dev/null
+#		chmod -R 777 $MONGODDIR$NUM
+	elif [ $TYPE = 'configsvr' ]; then
+		mkdir -p $MONGOCFG/{db,configdb} > /dev/null
+		chmod -R 777 $MONGOCFG/
+	else
+		mkdir -p $MONGOSDIR/db > /dev/null
+#		chmod -R 777 $MONGOSDIR
+
+	fi
+	if [ $? -eq 0 ]; then
+		echo "Directory created"
+	else
+		echo "Error creating new directories"
+	fi
+}
+
+#RUN CONTAINER
+# name, port, number, type, cfgsvr for mongos
+runCont(){
+	NAME=$1
+	PORT=$2
+	NUMBER=$3
+	TYPE=$4	
+	echo $4
+	#TODO: REDIRECT OUTPUT TO /dev/null
+	echo "$NAME $PORT $NUMBER $TYPE"
+	if [ $TYPE = 'mongod' ]; then
+		echo "dbpath is $MONGODDIR/db"		
+		docker run --name $NAME -p $PORT:27017 -v $MONGODDIR$NUMBER:/data mongodb $MONGODCMD --replSet rs$i 
+	elif [ $TYPE = 'configsvr' ]; then
+		docker run --name $NAME -p $PORT:27019 -v $MONGOCFG:/data mongodb $MONGODCMD --configsvr 
+	else 
+		docker run --name $NAME -p $PORT:27017 -v $MONGOSDIR$i:/data mongodb $MONGOSCMD $5 
+	fi	
+	exit 0
+}
+
+stopContainers(){
+	#STOP All
+	echo "Stopping all containers..."
+	docker stop $(docker ps -q)
+	exit 0
+}
+
+clean(){
+	docker rm $(docker ps -aq)
+	exit 0
+}
+
+startRS(){
+	#DATA NODES
+	echo $NUM_MONGOD
+	i=1
+	for i in `seq 1 $NUM_MONGOD`;
+	do
+		createdir mongod $i
+		echo $i
+		#Run docker container
+		echo "rs$i-srv2 $PORTRANGE$i $i 'mongod'"
+		runCont "rs$i-srv2" "$PORTRANGE$i" "$i" 'mongod' > logRS2/mongod$i.log 2>&1 &
+		#docker run --name "rs$i-srv1" -p "3701$i":27017 -v "/space/data/db$i":/data mongodb mongod -f /etc/mongod.conf --replSet rs$i  &
+		#> /dev/null 2>&1 &
+	
+	done
+	exit 0
+}
+
+startConfigSvr(){
+	createdir configSvr 0
+	#CONFIG SERVER
+	runCont cfgsrv2 "$PORTRANGE0" 0 configsvr > logRS2/cfgsvr.log 2>&1 &
+	#docker run --name cfgsrv1 -p 37010:27019 -v "/space/data/cfg":/data mongodb mongod -f /etc/mongod.conf --configsvr & 
+	exit 0
+}
+	
+
+startMongos(){
+	createdir mongos 
+	#MONGOS
+	runCont mongos "$PORTRANGE7" 0 mongos $1:$2 > logRS2/mongos.log 2>&1 & 
+	exit 0
+}
+
+listContainers(){
+	echo "Checking containers"
+	sleep 5
+	docker ps
+}
+
+#MAIN SCRIPT
+
+case "$1" in
+setup)
+	mkdir logRS2
+	createdir configsvr
+	createdir mongos
+	;;
+startRS)
+        startRS
+        ;;
+startConfigSvr)
+        startConfigSvr 
+        ;;
+startMongos)
+	startMongos $HOSTIP $PORTRANGE0
+	;;
+list)
+	listContainers
+	;;
+stop)
+	stopContainers
+	;;
+clean)
+	clean
+	;;
+restart)
+        $0 stop
+	$0 setup
+        $0 startRS
+	$0 startConfigSvr
+	$0 startMongos
+        ;;
+*)      echo  'Usage: mongoDocker_RS1.sh {setup|startRS|startConfigSvr|startMongos|list|stop|restart}'
+        exit 2
+        ;;
+esac
+exit 0
+
