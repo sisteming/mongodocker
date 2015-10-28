@@ -4,7 +4,6 @@ MAINTAINER Marco Bonezzi "marco.bonezzi@10gen.com"
 #PARAMETERS
 # DATA VOLUME = /data/db
 # configuration = mongod_wt.conf (can be built outside)
-# PORT (EXPOSE) 
 
 #CREATE GROUP AND USER FOR MONGODB
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
@@ -27,12 +26,11 @@ RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/dow
 	&& chmod +x /usr/local/bin/gosu
 
 # ADDING REPO KEY
-# gpg: key 7F0CEB10: public key "Richard Kreuter <richard@10gen.com>" imported
-RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 492EAFE8CD016A07919F1D2B9ECBEC467F0CEB10
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
 
 # SETTING MONGODB VERSION TO WORK WITH
 ENV MONGO_MAJOR 3.0
-ENV MONGO_VERSION 3.0.5
+ENV MONGO_VERSION 3.0.7
 
 # APPEND THE LATEST REPO VERSION TO sources.list
 RUN echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
@@ -56,11 +54,6 @@ COPY docker-entrypoint.sh /entrypoint.sh
 COPY mongod_wt.conf /etc/mongod.conf
 RUN chown -R mongodb:mongodb /etc/mongod.conf
 
-#WIREDTIGER SPECIFIC TUNING
-#RUN echo never > /sys/kernel/mm/transparent_hugepage/enabled
-#RUN echo 0 > /proc/sys/vm/zone_reclaim_mode
-#RUN ulimit -n 64000 && ulimit -u 64000
-
 # DEFINE ENTRYPOINT
 ENTRYPOINT ["/entrypoint.sh"]
 
@@ -68,7 +61,6 @@ ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 27017
 EXPOSE 27019
 # COMMAND TO RUN WHEN RUNNING THE CONTAINER
-# !NEEDSWORK (not happy with mongod.conf file)
 #CMD [mongod", "-f", "/etc/mongod.conf","--dbpath","/data/db"]
 CMD ["-f", "/etc/mongod.conf"]
 
