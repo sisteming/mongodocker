@@ -52,7 +52,7 @@ PS. Please note that the file mongod_wt.conf and docker-entrypoint.sh need to be
 
 ### [mongod_wt.conf](https://github.com/sisteming/mongodocker/blob/master/DockerWork/mongod_wt.conf)
 The configuration file used is the following:
-```systemLog:
+`systemLog:
   destination: file
   path: "/data/db/mongod.log"
   logAppend: true
@@ -62,7 +62,7 @@ storage:
     collectionConfig: 
       configString: 'type=file'
     indexConfig:
-      configString: 'type=lsm'```
+      configString: 'type=lsm'`
       
       
 ## Replica Sets and Sharding
