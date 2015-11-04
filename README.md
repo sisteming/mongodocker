@@ -7,8 +7,7 @@
 
 ## Main scripts
 
-### mongoDocker_RS1.sh
-
+### [mongoDocker_RS1.sh](https://github.com/sisteming/mongodocker/blob/master/DockerWork/mongoDocker_RS1.sh)
 This is the main script to configure, deploy and run MongoDB using Docker containers. 
 
 Here we have several functions to simplify some of the operations during the deployment like the following:
@@ -32,7 +31,8 @@ These functions can be used as follows:
 This script is also repeated as **mongoDocker_RS2** and **mongoDocker_RS3** for each replica set, as they were running on different servers but also tested under a single server.
 
 
-### mongodb.docker
+### [mongodb.docker](https://github.com/sisteming/mongodocker/blob/master/DockerWork/mongodb.docker)
+
 Dockerfile used to build the MongoDB image
 Please note the following:
 
@@ -50,7 +50,7 @@ This file can be used to create a docker image with the following command:
 
 PS. Please note that the file mongod_wt.conf and docker-entrypoint.sh need to be on the same directory as the dockerfile
 
-### mongod_wt.conf
+### [mongod_wt.conf](https://github.com/sisteming/mongodocker/blob/master/DockerWork/mongod_wt.conf)
 The configuration file used is the following:
 `systemLog:
   destination: file
@@ -72,7 +72,7 @@ Additional script to configure and deploy Replica Sets and sharding for the shar
 Most of these accept parameters like the origin IP and target IP and the number of mongod used, so they can be used to scale according to our deployment.
 
 ### ReplicaSet setup script:
-DockerWork/RS/setRSv2.sh
+[DockerWork/RS/setRSv2.sh](https://github.com/sisteming/mongodocker/blob/master/DockerWork/RS/setRSv2.sh)
 
 ### Sharding setup script:
-DockerWork/RS/setSHv2.sh
+[DockerWork/RS/setSHv2.sh](https://github.com/sisteming/mongodocker/blob/master/DockerWork/RS/setSHv2.sh)
