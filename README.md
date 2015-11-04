@@ -72,7 +72,7 @@ Additional script to configure and deploy Replica Sets and sharding for the shar
 Most of these accept parameters like the origin IP and target IP and the number of mongod used, so they can be used to scale according to our deployment.
 
 ### ReplicaSet setup script:
-setRSv2.sh
+DockerWork/RS/setRSv2.sh
 
 ### Sharding setup script:
-setSHv2.sh
+DockerWork/RS/setSHv2.sh
